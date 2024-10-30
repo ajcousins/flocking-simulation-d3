@@ -2,7 +2,8 @@
 import { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 import { Boid } from '../classes/boid';
-import { Vector } from '../classes/vector';
+// import { Vector } from '../classes/vector';
+import { Vector } from 'p5';
 
 const CANVAS_DIMS = {
   WIDTH: 500,
@@ -20,29 +21,57 @@ const Canvas = () => {
   useEffect(() => {
     const svg = d3.select('#canvas');
 
-    const flock = [];
+    const boids = [];
 
-    for (let i = 0; i < 100; i++) {
-      flock.push(
+    for (let i = 0; i < 50; i++) {
+      boids.push(
         new Boid({
-          startPos: new Vector(CANVAS_DIMS.WIDTH / 2, CANVAS_DIMS.HEIGHT / 2),
+          startPos: new Vector(
+            Math.random() * CANVAS_DIMS.WIDTH,
+            Math.random() * CANVAS_DIMS.HEIGHT
+          ),
           canvas: svg,
+          id: i,
         })
       );
     }
+    // boids.push(new Boid({
+    //   startPos: new Vector(200, 350),
+    //   startVelocity: new Vector(4, -3),
+    //   canvas: svg,
+    //   id: 0
+    // }))
+    // boids.push(new Boid({
+    //   startPos: new Vector(180, 350),
+    //   startVelocity: new Vector(4, -3),
+    //   canvas: svg,
+    //   id: 0
+    // }))
+    // boids.push(new Boid({
+    //   startPos: new Vector(300, 350),
+    //   startVelocity: new Vector(-4, -3),
+    //   canvas: svg,
+    //   id: 1
+    // }))
 
-    for (let boid of flock) {
+    for (let boid of boids) {
       boid.show();
     }
 
     d3.interval(() => {
-      update(flock);
-    }, 30);
+      // console.log('------------- frame -------------');
+      update(boids);
+    }, 15);
   }, []);
 
-  function update(flock) {
-    for (let boid of flock) {
+  function update(boids) {
+    for (let boid of boids) {
+      boid.edges();
+      boid.flock(boids);
       boid.updatePos();
+    }
+    for (let boid of boids) {
+      boid.updateRender();
     }
   }
 
