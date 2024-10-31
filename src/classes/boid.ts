@@ -1,5 +1,4 @@
-import { Vector } from 'p5';
-import { getDistance } from '../helpers/vector-helpers';
+import { Vector } from './vector';
 
 interface BoidProps {
   startPos: Vector;
@@ -56,7 +55,7 @@ export class Boid {
     let steering = new Vector();
     let total = 0;
     for (let other of boids) {
-      let d = getDistance(this.position, other.position);
+      let d = Vector.getDistance(this.position, other.position);
       if (other != this && d < perceptionRadius) {
         steering.add(other.velocity);
         total++;
@@ -77,12 +76,12 @@ export class Boid {
     alignment.mult(1.5); // default slider value
     this.acceleration.add(alignment);
   }
-  
+
   updatePos() {
     this.position.add(this.velocity);
     this.velocity.add(this.acceleration);
     this.velocity.limit(this.maxSpeed);
-    this.acceleration.mult(0)
+    this.acceleration.mult(0);
   }
 
   updateRender() {

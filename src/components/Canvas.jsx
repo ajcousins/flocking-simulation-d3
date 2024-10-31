@@ -2,7 +2,7 @@
 import { useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 import { Boid } from '../classes/boid';
-import { Vector } from 'p5';
+import { Vector } from '../classes/vector';
 
 const CANVAS_DIMS = {
   WIDTH: 500,
