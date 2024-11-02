@@ -58,7 +58,7 @@ export class Vector {
   limit(max: number) {
     const mSq = this.magSq();
     if (mSq > max * max) {
-      this.div(Math.sqrt(mSq)) //normalize it
+      this.div(Math.sqrt(mSq)) // normalize it
         .mult(max);
     }
     return this;

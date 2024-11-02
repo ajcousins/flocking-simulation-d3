@@ -25,7 +25,7 @@ export class Boid {
     this.velocity.setMag(3);
     this.acceleration = new Vector();
     this.maxForce = 0.2;
-    this.maxSpeed = 2;
+    this.maxSpeed = 6;
   }
 
   edges() {
@@ -45,13 +45,11 @@ export class Boid {
     this.element = this.canvas
       .append('path')
       .attr('d', 'M 14 0 L 0 -4 L 0 4 Z')
-      .attr('stroke', 'white')
+      .attr('stroke', '#999999')
       .attr(
         'transform',
-        `
-        translate(${this.position.x}, ${this.position.y})
-        rotate(${this.velocity.getAngle()})
-      `
+        `translate(${this.position.x}, ${this.position.y})
+          rotate(${this.velocity.getAngle()})`
       );
   }
 
@@ -76,10 +74,64 @@ export class Boid {
     return steering;
   }
 
+  separation(boids) {
+    let perceptionRadius = 24;
+    let steering = new Vector();
+    let total = 0;
+    for (let other of boids) {
+      let d = Vector.getDistance(this.position, other.position);
+      if (other != this && d < perceptionRadius) {
+        let diff = new Vector(this.position.x, this.position.y).sub(
+          other.position
+        );
+        diff.div(d * d);
+        steering.add(diff);
+        total++;
+      }
+    }
+    if (total > 0) {
+      steering.div(total);
+      steering.setMag(this.maxSpeed);
+      steering.sub(this.velocity);
+      steering.limit(this.maxForce);
+    }
+    return steering;
+  }
+
+  cohesion(boids) {
+    let perceptionRadius = 50;
+    let steering = new Vector();
+    let total = 0;
+    for (let other of boids) {
+      let d = Vector.getDistance(this.position, other.position);
+      if (other != this && d < perceptionRadius) {
+        steering.add(other.position);
+        total++;
+      }
+    }
+    if (total > 0) {
+      steering.div(total);
+      steering.sub(this.position);
+      steering.setMag(this.maxSpeed);
+      steering.sub(this.velocity);
+      steering.limit(this.maxForce);
+    }
+    return steering;
+  }
+
   flock(boids: Boid[]) {
-    let alignment = this.align(boids);
-    alignment.mult(1.5); // default slider value
+    const alignment = this.align(boids);
+    const separation = this.separation(boids);
+    const cohesion = this.cohesion(boids);
+
+    // default slider values
+    alignment.mult(1.5);
+    separation.mult(2);
+    cohesion.mult(1);
+
     this.acceleration.add(alignment);
+    this.acceleration.add(separation);
+    this.acceleration.add(cohesion);
   }
 
   updatePos() {
@@ -92,10 +144,8 @@ export class Boid {
   updateRender() {
     this.element.attr(
       'transform',
-      `
-        translate(${this.position.x}, ${this.position.y})
-        rotate(${this.velocity.getAngle()})
-      `
+      `translate(${this.position.x}, ${this.position.y})
+        rotate(${this.velocity.getAngle()})`
     );
   }
 }
