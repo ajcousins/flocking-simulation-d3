@@ -13,7 +13,7 @@ export class Boid {
   velocity: Vector;
   acceleration: Vector;
   canvas: d3.Selection<d3.BaseType, any, HTMLElement, any>;
-  element: d3.Selection<SVGCircleElement, any, HTMLElement, any>;
+  element: d3.Selection<SVGPathElement, any, HTMLElement, any>;
   maxForce: number;
   maxSpeed: number;
 
@@ -43,11 +43,16 @@ export class Boid {
 
   show() {
     this.element = this.canvas
-      .append('circle')
-      .attr('r', 2)
-      .attr('fill', 'yellow')
-      .attr('cx', this.position.x)
-      .attr('cy', this.position.y);
+      .append('path')
+      .attr('d', 'M 14 0 L 0 -4 L 0 4 Z')
+      .attr('stroke', 'white')
+      .attr(
+        'transform',
+        `
+        translate(${this.position.x}, ${this.position.y})
+        rotate(${this.velocity.getAngle()})
+      `
+      );
   }
 
   align(boids: Boid[]): Vector {
@@ -85,6 +90,12 @@ export class Boid {
   }
 
   updateRender() {
-    this.element.attr('cx', this.position.x).attr('cy', this.position.y);
+    this.element.attr(
+      'transform',
+      `
+        translate(${this.position.x}, ${this.position.y})
+        rotate(${this.velocity.getAngle()})
+      `
+    );
   }
 }

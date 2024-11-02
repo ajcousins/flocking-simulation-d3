@@ -64,6 +64,13 @@ export class Vector {
     return this;
   }
 
+  getAngle() {
+    const angleRadians = Math.atan2(this.y, this.x);
+    let angleDegrees = angleRadians * (180 / Math.PI);
+    if (angleDegrees < 0) angleDegrees += 360;
+    return angleDegrees;
+  }
+
   static random2D(): Vector {
     const degrees = Math.random() * 360;
     const magnitude = Math.random() + 0.5;
