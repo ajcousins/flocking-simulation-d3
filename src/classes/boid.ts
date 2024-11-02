@@ -4,22 +4,22 @@ interface BoidProps {
   startPos: Vector;
   startVelocity?: Vector;
   canvas: d3.Selection<d3.BaseType, any, HTMLElement, any>;
-  id: number;
+  id: number | string;
 }
 
 export class Boid {
-  id: number;
+  id: number | string;
   position: Vector;
   velocity: Vector;
   acceleration: Vector;
   canvas: d3.Selection<d3.BaseType, any, HTMLElement, any>;
-  element: d3.Selection<SVGPathElement, any, HTMLElement, any>;
+  element: d3.Selection<any, any, HTMLElement, any>;
   maxForce: number;
   maxSpeed: number;
 
   constructor({ startPos, startVelocity, canvas, id }: BoidProps) {
     this.id = id;
-    this.canvas = canvas;
+    this.canvas = canvas ?? null;
     this.position = startPos;
     this.velocity = startVelocity ?? Vector.random2D();
     this.velocity.setMag(3);
@@ -29,6 +29,7 @@ export class Boid {
   }
 
   edges() {
+    if (this.id === 'mouse') return;
     if (this.position.x > 500) {
       this.position.x = 0;
     } else if (this.position.x < 0) {
@@ -41,16 +42,8 @@ export class Boid {
     }
   }
 
-  show() {
-    this.element = this.canvas
-      .append('path')
-      .attr('d', 'M 14 0 L 0 -4 L 0 4 Z')
-      .attr('stroke', '#999999')
-      .attr(
-        'transform',
-        `translate(${this.position.x}, ${this.position.y})
-          rotate(${this.velocity.getAngle()})`
-      );
+  setPosition(position: Vector): void {
+    this.position = position;
   }
 
   align(boids: Boid[]): Vector {
@@ -74,8 +67,8 @@ export class Boid {
     return steering;
   }
 
-  separation(boids) {
-    let perceptionRadius = 24;
+  separation(boids: Boid[]) {
+    let perceptionRadius = 25;
     let steering = new Vector();
     let total = 0;
     for (let other of boids) {
@@ -119,10 +112,30 @@ export class Boid {
     return steering;
   }
 
+  repelMouse(boids: Boid[]) {
+    let perceptionRadius = 50;
+    let steering = new Vector();
+    if (this.id === 'mouse') return steering;
+    const mouse = boids.find((boid) => boid.id === 'mouse');
+    if (!mouse) return steering;
+    const distanceFromMouse = Vector.getDistance(this.position, mouse.position);
+    if (distanceFromMouse > perceptionRadius) return steering;
+
+    const differenceVector = new Vector()
+      .add(this.position)
+      .sub(mouse.position);
+
+    this.position.add(differenceVector);
+    this.velocity.mult(-1);
+
+    return;
+  }
+
   flock(boids: Boid[]) {
     const alignment = this.align(boids);
     const separation = this.separation(boids);
     const cohesion = this.cohesion(boids);
+    this.repelMouse(boids);
 
     // default slider values
     alignment.mult(1.5);
@@ -135,13 +148,28 @@ export class Boid {
   }
 
   updatePos() {
+    if (this.id === 'mouse') return;
     this.position.add(this.velocity);
     this.velocity.add(this.acceleration);
     this.velocity.limit(this.maxSpeed);
     this.acceleration.mult(0);
   }
 
+  show() {
+    if (this.id === 'mouse') return;
+    this.element = this.canvas
+      .append('path')
+      .attr('d', 'M 14 0 L 0 -4 L 0 4 Z')
+      .attr('stroke', '#999999')
+      .attr(
+        'transform',
+        `translate(${this.position.x}, ${this.position.y})
+          rotate(${this.velocity.getAngle()})`
+      );
+  }
+
   updateRender() {
+    if (this.id === 'mouse') return;
     this.element.attr(
       'transform',
       `translate(${this.position.x}, ${this.position.y})

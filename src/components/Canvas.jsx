@@ -35,9 +35,22 @@ const Canvas = () => {
       );
     }
 
+    const mouseBoid = new Boid({
+      startPos: new Vector(-100, -100), // off screen
+      canvas: svg,
+      id: 'mouse',
+    });
+
+    boids.push(mouseBoid);
+
     for (let boid of boids) {
       boid.show();
     }
+
+    svg.on('mousemove', (event) => {
+      const { offsetX, offsetY } = event;
+      mouseBoid.setPosition(new Vector(offsetX, offsetY));
+    });
 
     d3.interval(() => {
       update(boids);
