@@ -4,6 +4,7 @@ import * as d3 from 'd3';
 import { Boid } from '../classes/boid';
 import { Vector } from '../classes/vector';
 
+const NUMBER_OF_BOIDS = 20;
 const CANVAS_DIMS = {
   WIDTH: 500,
   HEIGHT: 500,
@@ -22,7 +23,7 @@ const Canvas = () => {
 
     const boids = [];
 
-    for (let i = 0; i < 50; i++) {
+    for (let i = 0; i < NUMBER_OF_BOIDS; i++) {
       boids.push(
         new Boid({
           startPos: new Vector(
@@ -30,6 +31,8 @@ const Canvas = () => {
             Math.random() * CANVAS_DIMS.HEIGHT
           ),
           canvas: svg,
+          canvasWidth: CANVAS_DIMS.WIDTH,
+          canvasHeight: CANVAS_DIMS.HEIGHT,
           id: i,
         })
       );
@@ -38,6 +41,8 @@ const Canvas = () => {
     const mouseBoid = new Boid({
       startPos: new Vector(-100, -100), // off screen
       canvas: svg,
+      canvasWidth: CANVAS_DIMS.WIDTH,
+      canvasHeight: CANVAS_DIMS.HEIGHT,
       id: 'mouse',
     });
 

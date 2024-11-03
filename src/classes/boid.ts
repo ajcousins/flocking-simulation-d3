@@ -4,6 +4,8 @@ interface BoidProps {
   startPos: Vector;
   startVelocity?: Vector;
   canvas: d3.Selection<d3.BaseType, any, HTMLElement, any>;
+  canvasWidth: number;
+  canvasHeight: number;
   id: number | string;
 }
 
@@ -13,12 +15,16 @@ export class Boid {
   velocity: Vector;
   acceleration: Vector;
   canvas: d3.Selection<d3.BaseType, any, HTMLElement, any>;
+  canvasWidth: number;
+  canvasHeight: number;
   element: d3.Selection<any, any, HTMLElement, any>;
   maxForce: number;
   maxSpeed: number;
 
-  constructor({ startPos, startVelocity, canvas, id }: BoidProps) {
+  constructor({ startPos, startVelocity, canvas, canvasWidth, canvasHeight, id }: BoidProps) {
     this.id = id;
+    this.canvasWidth = canvasWidth;
+    this.canvasHeight = canvasHeight;
     this.canvas = canvas ?? null;
     this.position = startPos;
     this.velocity = startVelocity ?? Vector.random2D();
@@ -30,15 +36,15 @@ export class Boid {
 
   edges() {
     if (this.id === 'mouse') return;
-    if (this.position.x > 500) {
+    if (this.position.x > this.canvasWidth) {
       this.position.x = 0;
     } else if (this.position.x < 0) {
-      this.position.x = 500;
+      this.position.x = this.canvasWidth;
     }
-    if (this.position.y > 500) {
+    if (this.position.y > this.canvasHeight) {
       this.position.y = 0;
     } else if (this.position.y < 0) {
-      this.position.y = 500;
+      this.position.y = this.canvasHeight;
     }
   }
 
@@ -113,22 +119,40 @@ export class Boid {
   }
 
   repelMouse(boids: Boid[]) {
-    let perceptionRadius = 50;
-    let steering = new Vector();
-    if (this.id === 'mouse') return steering;
+    if (this.id === 'mouse') return;
     const mouse = boids.find((boid) => boid.id === 'mouse');
-    if (!mouse) return steering;
+    if (!mouse) return;
+    const positionDifferenceAngle = Vector.getAngleBetweenPoints(
+      this.position,
+      mouse.position
+    );
+    const velocityAngle = this.velocity.getAngle();
+    const angleDifference = velocityAngle - positionDifferenceAngle;
+    // console.log('angleDifference:', angleDifference);
+
+    
+    const perceptionRadius = 100;
+    const deflectionAngle = 90;
+
     const distanceFromMouse = Vector.getDistance(this.position, mouse.position);
-    if (distanceFromMouse > perceptionRadius) return steering;
+    if (Math.abs(angleDifference) < 45 && distanceFromMouse < perceptionRadius) {
+      // console.log('--- within trajectory ---');
+      
+    }
 
-    const differenceVector = new Vector()
-      .add(this.position)
-      .sub(mouse.position);
+    // let steering = new Vector();
+    // if (this.id === 'mouse') return steering;
+    // const mouse = boids.find((boid) => boid.id === 'mouse');
+    // if (!mouse) return steering;
 
-    this.position.add(differenceVector);
-    this.velocity.mult(-1);
+    // const differenceVector = new Vector()
+    //   .add(this.position)
+    //   .sub(mouse.position);
 
-    return;
+    // this.position.add(differenceVector);
+    // this.velocity.mult(-1);
+
+    // return;
   }
 
   flock(boids: Boid[]) {
@@ -156,7 +180,16 @@ export class Boid {
   }
 
   show() {
-    if (this.id === 'mouse') return;
+    if (this.id === 'mouse') {
+      this.element = this.canvas
+        .append('circle')
+        .attr('r', 100)
+        .attr('stroke', '#555555')
+        .attr('fill', '#00000000')
+        .attr('cx', this.position.x)
+        .attr('cy', this.position.y);
+      return;
+    }
     this.element = this.canvas
       .append('path')
       .attr('d', 'M 14 0 L 0 -4 L 0 4 Z')
@@ -169,7 +202,10 @@ export class Boid {
   }
 
   updateRender() {
-    if (this.id === 'mouse') return;
+    if (this.id === 'mouse') {
+      this.element.attr('cx', this.position.x).attr('cy', this.position.y);
+      return;
+    }
     this.element.attr(
       'transform',
       `translate(${this.position.x}, ${this.position.y})

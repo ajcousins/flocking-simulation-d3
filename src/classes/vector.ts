@@ -65,6 +65,13 @@ export class Vector {
   }
 
   getAngle() {
+    /**
+     * Returns the angle of the vector.
+     * Positive x-axis is 0.
+     * Negative y-axis is 90.
+     * Negative x-axis is 180.
+     * Positive y-axis is 270.
+     */
     const angleRadians = Math.atan2(this.y, this.x);
     let angleDegrees = angleRadians * (180 / Math.PI);
     if (angleDegrees < 0) angleDegrees += 360;
@@ -86,4 +93,17 @@ export class Vector {
     const dy = location1.y - location2.y;
     return Math.sqrt(dx * dx + dy * dy);
   }
+
+  static getAngleBetweenPoints(point1: Vector, point2: Vector): number {
+    const dx = point2.x - point1.x;
+    const dy = point2.y - point1.y;
+  
+    const angleInRadians = Math.atan2(dy, dx);
+    const angleInDegrees = angleInRadians * (180 / Math.PI);
+  
+    // Ensure the angle is between 0 and 360 degrees
+    return (angleInDegrees + 360) % 360;
+  }
+  
+  
 }
