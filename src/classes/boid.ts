@@ -21,7 +21,14 @@ export class Boid {
   maxForce: number;
   maxSpeed: number;
 
-  constructor({ startPos, startVelocity, canvas, canvasWidth, canvasHeight, id }: BoidProps) {
+  constructor({
+    startPos,
+    startVelocity,
+    canvas,
+    canvasWidth,
+    canvasHeight,
+    id,
+  }: BoidProps) {
     this.id = id;
     this.canvasWidth = canvasWidth;
     this.canvasHeight = canvasHeight;
@@ -57,6 +64,7 @@ export class Boid {
     let steering = new Vector();
     let total = 0;
     for (let other of boids) {
+      if (other.id === 'mouse') continue;
       let d = Vector.getDistance(this.position, other.position);
       if (other != this && d < perceptionRadius) {
         steering.add(other.velocity);
@@ -78,6 +86,7 @@ export class Boid {
     let steering = new Vector();
     let total = 0;
     for (let other of boids) {
+      if (other.id === 'mouse') continue;
       let d = Vector.getDistance(this.position, other.position);
       if (other != this && d < perceptionRadius) {
         let diff = new Vector(this.position.x, this.position.y).sub(
@@ -102,6 +111,7 @@ export class Boid {
     let steering = new Vector();
     let total = 0;
     for (let other of boids) {
+      if (other.id === 'mouse') continue;
       let d = Vector.getDistance(this.position, other.position);
       if (other != this && d < perceptionRadius) {
         steering.add(other.position);
@@ -119,56 +129,63 @@ export class Boid {
   }
 
   repelMouse(boids: Boid[]) {
-    if (this.id === 'mouse') return;
+    let steering = new Vector();
+    if (this.id === 'mouse') return steering;
     const mouse = boids.find((boid) => boid.id === 'mouse');
-    if (!mouse) return;
+    if (!mouse) return steering;
     const positionDifferenceAngle = Vector.getAngleBetweenPoints(
       this.position,
       mouse.position
     );
     const velocityAngle = this.velocity.getAngle();
     const angleDifference = velocityAngle - positionDifferenceAngle;
-    // console.log('angleDifference:', angleDifference);
-
-    
     const perceptionRadius = 100;
-    const deflectionAngle = 90;
+    const maxDeflectionAngle = 60;
 
     const distanceFromMouse = Vector.getDistance(this.position, mouse.position);
-    if (Math.abs(angleDifference) < 45 && distanceFromMouse < perceptionRadius) {
-      // console.log('--- within trajectory ---');
-      
+    if (
+      Math.abs(angleDifference) < 45 &&
+      distanceFromMouse < perceptionRadius
+    ) {
+      const perpendicularVector = Vector.getResultantAngleTransform(
+        this.velocity,
+        maxDeflectionAngle
+      );
+      steering.add(perpendicularVector);
     }
 
-    // let steering = new Vector();
-    // if (this.id === 'mouse') return steering;
-    // const mouse = boids.find((boid) => boid.id === 'mouse');
-    // if (!mouse) return steering;
+    if (
+      Math.abs(angleDifference) > 315 &&
+      distanceFromMouse < perceptionRadius
+    ) {
+      const perpendicularVector = Vector.getResultantAngleTransform(
+        this.velocity,
+        -maxDeflectionAngle
+      );
+      steering.add(perpendicularVector);
+    }
+    steering.limit(this.maxForce);
+    steering.setMag(this.maxSpeed);
 
-    // const differenceVector = new Vector()
-    //   .add(this.position)
-    //   .sub(mouse.position);
-
-    // this.position.add(differenceVector);
-    // this.velocity.mult(-1);
-
-    // return;
+    return steering;
   }
 
   flock(boids: Boid[]) {
     const alignment = this.align(boids);
     const separation = this.separation(boids);
     const cohesion = this.cohesion(boids);
-    this.repelMouse(boids);
+    const mouseRepel = this.repelMouse(boids);
 
     // default slider values
     alignment.mult(1.5);
     separation.mult(2);
     cohesion.mult(1);
+    mouseRepel.mult(10);
 
     this.acceleration.add(alignment);
     this.acceleration.add(separation);
     this.acceleration.add(cohesion);
+    this.acceleration.add(mouseRepel);
   }
 
   updatePos() {
@@ -181,13 +198,14 @@ export class Boid {
 
   show() {
     if (this.id === 'mouse') {
-      this.element = this.canvas
-        .append('circle')
-        .attr('r', 100)
-        .attr('stroke', '#555555')
-        .attr('fill', '#00000000')
-        .attr('cx', this.position.x)
-        .attr('cy', this.position.y);
+      // // HIGHLIGHT MOUSE POSITION
+      // this.element = this.canvas
+      //   .append('circle')
+      //   .attr('r', 100)
+      //   .attr('stroke', '#555555')
+      //   .attr('fill', '#00000000')
+      //   .attr('cx', this.position.x)
+      //   .attr('cy', this.position.y);
       return;
     }
     this.element = this.canvas
@@ -203,7 +221,8 @@ export class Boid {
 
   updateRender() {
     if (this.id === 'mouse') {
-      this.element.attr('cx', this.position.x).attr('cy', this.position.y);
+      // // HIGHLIGHT MOUSE POSITION
+      // this.element.attr('cx', this.position.x).attr('cy', this.position.y);
       return;
     }
     this.element.attr(

@@ -97,13 +97,28 @@ export class Vector {
   static getAngleBetweenPoints(point1: Vector, point2: Vector): number {
     const dx = point2.x - point1.x;
     const dy = point2.y - point1.y;
-  
+
     const angleInRadians = Math.atan2(dy, dx);
     const angleInDegrees = angleInRadians * (180 / Math.PI);
-  
+
     // Ensure the angle is between 0 and 360 degrees
     return (angleInDegrees + 360) % 360;
   }
-  
-  
+
+  static getResultantAngleTransform(
+    input: Vector,
+    angleDegrees: number
+  ): Vector {
+    // method returns resulting vector after an angle is applied to input vector
+    const angleRadians = (angleDegrees * Math.PI) / 180;
+
+    const cosTheta = Math.cos(angleRadians);
+    const sinTheta = Math.sin(angleRadians);
+    const newX = input.x * cosTheta + input.y * sinTheta;
+    const newY = -input.x * sinTheta + input.y * cosTheta;
+    const roundedX = Number(newX.toFixed(2));
+    const roundedY = Number(newY.toFixed(2));
+
+    return new Vector(roundedX, roundedY);
+  }
 }
